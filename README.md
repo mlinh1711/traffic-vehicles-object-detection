@@ -1,56 +1,81 @@
+# Traffic Vehicles Object Detection (YOLO Experiments)
+
+This repository contains a complete **traffic vehicle object detection** workflow implemented in a single Jupyter Notebook. The notebook covers environment setup, dataset sanity checks, label cleaning, training multiple YOLO configurations, validating models on the validation split, and selecting the best model based on mAP.
+
+Dataset (Kaggle): https://www.kaggle.com/datasets/saumyapatel/traffic-vehicles-object-detection
+
+Notebook code reference: :contentReference[oaicite:0]{index=0}
 
 ---
 
-# Traffic Vehicles Object Detection
+## What this project does
 
-This project implements a **traffic vehicle object detection** system using deep learning techniques in Computer Vision. The objective is to detect and localize vehicles in traffic scenes from images and videos, supporting applications such as traffic monitoring, intelligent transportation systems, and urban traffic analysis.
+The notebook implements an end to end pipeline:
 
-The implementation is provided in the form of a Jupyter Notebook to ensure clarity, reproducibility, and ease of experimentation.
-
----
-
-## Project Overview
-
-Traffic surveillance plays a crucial role in modern smart city infrastructure. Automating vehicle detection from traffic footage helps reduce manual observation, improve analysis accuracy, and enable real-time traffic management.
-
-In this project, a deep learning–based object detection approach is applied to identify vehicles in traffic scenes. The workflow includes loading the dataset, applying a pretrained object detection model, performing inference, and visualizing detection results directly on images and videos.
-
----
-
-## Dataset
-
-Due to GitHub file size limitations, the dataset is **not included** in this repository.
-
-The dataset used in this project is publicly available on Kaggle:
-
-**Traffic Vehicles Object Detection Dataset**  
-https://www.kaggle.com/datasets/saumyapatel/traffic-vehicles-object-detection
-
-### Dataset Usage
-
-After downloading and extracting the dataset, store it locally following a structure similar to:
-
-```
-
-Traffic Dataset/
-├── images/
-│   ├── train/
-│   ├── val/
-│   └── test/
-└── videos/
-
-```
-
-The notebook assumes the dataset is stored locally and accessed via file paths defined within the code.
+1. Install and import required libraries (Ultralytics YOLO, OpenCV, etc.)
+2. Create `data.yaml` for YOLO training
+3. EDA + sanity checks:
+   - Count images and labels per split
+   - Check class distribution
+   - Validate label format and ranges
+   - Visualize sample images with bounding boxes
+4. Clean the dataset:
+   - Remove invalid label rows (if any)
+   - Create a cleaned dataset folder at `/kaggle/working/traffic_dataset_clean`
+   - Re-generate `data.yaml` pointing to the cleaned dataset
+5. Train and compare multiple models:
+   - YOLOv8n baseline
+   - YOLOv8s (higher capacity, higher resolution)
+   - YOLOv9m (larger model)
+6. Validate each model on the validation set and export a comparison table
+7. Automatically select the best model based on **mAP50-95** and save it as `best_overall.pt`
+8. Run inference on the test split using the best model and save visualized predictions
 
 ---
 
-## Repository Structure
+## Classes
+
+The model detects 7 classes:
+
+- Car
+- Number Plate
+- Blur Number Plate
+- Two Wheeler
+- Auto
+- Bus
+- Truck
+
+---
+
+## Results summary (Validation)
+
+Validation split stats (from the notebook output):
+- Images: 185
+- Instances: 1980
+- Classes: 7
+
+The notebook evaluates 3 experiments and prints a sorted comparison table by **mAP50-95**:
+
+| Experiment        | imgsz | Precision | Recall | mAP50  | mAP50-95 |
+|------------------|------:|----------:|-------:|-------:|---------:|
+| y8s_896          |   896 | 0.812     | 0.774  | 0.852  | 0.607    |
+| y9m_896          |   896 | 0.723     | 0.799  | 0.821  | 0.543    |
+| y8n_baseline_736 |   736 | 0.804     | 0.694  | 0.777  | 0.506    |
+
+Best model selected by the notebook:
+- **Exp:** `y8s_896`
+- **Best weights alias:** `/kaggle/working/best_overall.pt`
+- **Image size:** 896
+
+Note: the notebook also saves a CSV: `/kaggle/working/val_compare_models.csv`
+
+---
+
+## Repository structure
 
 ```
 
 traffic-vehicles-object-detection/
-│
 ├── traffic-vehicles-object-detection.ipynb
 ├── requirements.txt
 ├── .gitignore
@@ -58,78 +83,77 @@ traffic-vehicles-object-detection/
 
 ````
 
-### File Description
-
-- **traffic-vehicles-object-detection.ipynb**  
-  Main notebook containing the complete object detection workflow, including dataset loading, model inference, and result visualization.
-
-- **requirements.txt**  
-  Specifies the Python dependencies required to run the notebook.
-
-- **.gitignore**  
-  Prevents large datasets, videos, and generated artifacts from being pushed to GitHub.
+- `traffic-vehicles-object-detection.ipynb`: full pipeline (EDA, cleaning, training, validation, best-model selection, test prediction)
+- `requirements.txt`: dependencies
+- `.gitignore`: prevents large datasets, videos, and generated artifacts from being pushed to GitHub
 
 ---
 
-## Requirements
+## Dataset note (important)
 
-The project is implemented using **Python 3.9 or later**.
+The dataset is not included in this repo because GitHub blocks large files (for example, video files can exceed 100MB per file). Please download it from Kaggle using the link above and place it locally (or in Kaggle workspace) to run the notebook.
 
-Install the required dependencies using:
+---
 
+## Requirements (based on the notebook)
+
+Recommended: Python 3.9+ (the notebook log shows it was run on Python 3.11)
+
+Install dependencies:
 ```bash
 pip install -r requirements.txt
 ````
 
-Main libraries used in this project include:
+Your `requirements.txt` should include the libraries actually imported/installed in the notebook:
 
-* numpy
-* pandas
 * ultralytics
 * opencv-python
+* pillow
+* imagehash
+* numpy
+* pandas
 * matplotlib
 * PyYAML
 
-Note that the `ultralytics` package automatically installs PyTorch. For GPU acceleration, ensure that the appropriate PyTorch version compatible with your CUDA setup is installed.
+Tip: `ultralytics` pulls PyTorch automatically. If you want GPU support locally, install the correct PyTorch build for your CUDA version.
 
 ---
 
-## How to Run
+## How to run
 
-1. Clone this repository:
+### Option A: Kaggle (recommended)
 
-```bash
-git clone https://github.com/mlinh1711/traffic-vehicles-object-detection.git
-cd traffic-vehicles-object-detection
-```
+1. Create a Kaggle notebook
+2. Add the Kaggle dataset to the notebook (as an input)
+3. Upload this repository notebook or copy the code
+4. Run cells in order
 
-2. Install dependencies:
+### Option B: Local machine
 
-```bash
-pip install -r requirements.txt
-```
-
-3. Download the dataset from Kaggle and extract it to a local directory.
-
-4. Open the Jupyter Notebook:
-
-```bash
-jupyter notebook traffic-vehicles-object-detection.ipynb
-```
-
-5. Run the notebook cells sequentially to perform vehicle detection and visualize the results.
+1. Clone repo
+2. Install requirements
+3. Download dataset from Kaggle and extract it
+4. Update dataset path in the notebook if needed
+5. Run notebook top to bottom
 
 ---
 
-## Results
+## Outputs produced by the notebook
 
-The notebook produces visual detection outputs where vehicles are highlighted with bounding boxes on traffic images and video frames. These visualizations allow qualitative evaluation of detection performance and demonstrate the effectiveness of deep learning–based object detection for traffic scenes.
+During training and evaluation, Ultralytics will create experiment folders under `/kaggle/working/`, for example:
+
+* `/kaggle/working/y8n_baseline_736/`
+* `/kaggle/working/y8s_896/`
+* `/kaggle/working/y9m_896/`
+
+The notebook also creates:
+
+* `/kaggle/working/val_compare_models.csv`
+* `/kaggle/working/best_overall.pt`
+* `/kaggle/working/best_selection.json`
+* `/kaggle/working/test_with_boxes/` (predicted test images with bounding boxes)
+
+These outputs are intentionally not pushed to GitHub to keep the repo lightweight.
 
 ---
 
-## Notes
-
-* Large datasets and video files are intentionally excluded from this repository to keep it lightweight and easy to clone.
-* All experiments are reproducible using the provided notebook and the external dataset link.
-
----
