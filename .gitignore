@@ -1,0 +1,18 @@
+# Dataset & media
+*.mp4
+*.avi
+*.mov
+*.zip
+Traffic Dataset/
+
+# Model outputs
+runs/
+weights/
+*.pt
+*.onnx
+
+# Notebook cache
+.ipynb_checkpoints/
+
+# Python cache
+__pycache__/
